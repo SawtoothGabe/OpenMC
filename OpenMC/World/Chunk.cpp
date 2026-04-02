@@ -14,28 +14,31 @@ namespace mc
         m_Cz(cz),
         m_Material(material)
     {
+        le::EntityCreator creator;
+
         le::Application& app = le::Application::Get();
-        m_entity = app.GetGlobalScene().CreateEntity();
+        m_entityID = creator.GetUID();
         m_mesh = app.GetResourceManager().CreateResource<le::MeshData>(BLOCK_COUNT, BLOCK_COUNT,
             le::MeshData::UpdateFrequency::UPDATES_OCCASIONALLY);
         m_Data = std::make_unique<uint8_t[]>(BLOCK_COUNT);
 
-        m_entity.AddComponent<le::Transform>();
-        m_entity.AddComponent<le::Mesh>();
+        le::Transform transform;
+        transform.SetPosition(le::Vector3f(cx * WIDTH, 0, cz * LENGTH));
 
-        m_entity.QueryComponents<le::Transform, le::Mesh>([&](le::Transform& transform, le::Mesh& mesh)
-        {
-            transform.SetPosition(le::Vector3f(cx * WIDTH, 0, cz * LENGTH));
-            mesh.data = m_mesh->id;
-            mesh.material = material.Get()->id;
-        });
+        le::Mesh mesh;
+        mesh.data = m_mesh->id;
+        mesh.material = material.Get()->id;
+
+        creator.AddComponent<le::Transform>(transform);
+        creator.AddComponent<le::Mesh>(mesh);
+        app.GetGlobalScene().EnqueueEntityCreation(std::move(creator));
 
         Generate();
     }
 
     Chunk::Chunk(Chunk &&other) noexcept
         :
-        m_entity(other.m_entity),
+        m_entityID(other.m_entityID),
         m_World(other.m_World),
         m_Cx(other.m_Cx),
         m_Cz(other.m_Cz),
@@ -43,7 +46,7 @@ namespace mc
         m_Data(std::move(other.m_Data)),
         m_Material(other.m_Material)
     {
-        other.m_entity.uid = 0;
+        other.m_entityID = 0;
     }
 
     Chunk::~Chunk()

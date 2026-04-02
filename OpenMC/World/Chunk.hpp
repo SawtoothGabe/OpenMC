@@ -26,7 +26,7 @@ namespace mc
 		void UpdateMesh() const;
 		uint8_t GetBlock(int x, int y, int z) const;
 
-		le::Entity m_entity;
+		le::UID m_entityID;
 	private:
 		using Index = uint32_t;
 		using Indices = std::vector<Index>;
