@@ -11,6 +11,8 @@ namespace mc
 		le::Renderer& renderer = app.GetRenderer();
 		renderer.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
 
+		app.GetGlobalScene().SetAmbientLight(1.0f);
+
 		m_Sub.AddEventHandler<le::UpdateEvent>(
 			[this](const le::UpdateEvent& event) { Update(event); });
 
