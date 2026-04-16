@@ -81,13 +81,13 @@ namespace mc
 					UpdateNeighbors(x, z);
 				}
 
-			// std::vector<std::pair<int, int>> toRemove;
-			// for (const auto& key : m_Chunks | std::views::keys)
-			// 	if (DistanceFromChunk(key, playerPos) > VIEW_DISTANCE)
-			// 		toRemove.push_back(key);
-			//
-			// for (auto& key : toRemove)
-			// 	m_Chunks.erase(key);
+			std::vector<std::pair<int, int>> toRemove;
+			for (const auto& key : m_Chunks | std::views::keys)
+				if (DistanceFromChunk(key, playerPos) > VIEW_DISTANCE)
+					toRemove.push_back(key);
+
+			for (auto& key : toRemove)
+				m_Chunks.erase(key);
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}

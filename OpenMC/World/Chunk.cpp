@@ -51,7 +51,11 @@ namespace mc
 
     Chunk::~Chunk()
     {
-        //le::Application::Get().GetGlobalScene().RemoveObject(*m_Object);
+        if (m_entityID == 0)
+            return;
+
+        le::Application::Get().GetGlobalScene().EnqueueEntityDeletion(m_entityID);
+        le::Application::Get().GetResourceManager().Delete<le::MeshData>(m_mesh->id);
     }
 
     void Chunk::Generate()
@@ -73,7 +77,7 @@ namespace mc
         // There is a major problem with generating chunks: redundant data.
         // The obvious one is: if two solid blocks are neighbors,
         // the m_Material.GetCoordsAtIndex(face.north) connecting them shouldn't be rendered since it isn't visible.
-        
+
         for (uint16_t y = 0; y < HEIGHT; y++)
             for (uint16_t z = 0; z < LENGTH; z++)
             {
