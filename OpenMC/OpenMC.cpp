@@ -8,15 +8,15 @@ namespace mc
 		m_Sub(app.GetEventBus()),
 		m_World(m_Player, m_TerrainMat)
 	{
-		le::Renderer& renderer = app.GetRenderer();
-		renderer.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
+		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
+		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
 
 		app.GetGlobalScene().SetAmbientLight(1.0f);
 
 		m_Sub.AddEventHandler<le::UpdateEvent>(
 			[this](const le::UpdateEvent& event) { Update(event); });
 
-		le::Window& window = m_App.GetWindow();
+		le::Window& window = m_App.GetWindowManager().GetWindow();
 		// window.SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		window.SetRawInputEnabled(true);
 	}

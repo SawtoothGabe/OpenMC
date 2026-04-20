@@ -9,7 +9,7 @@ namespace mc
 		m_cameraEntity(le::Application::Get().GetGlobalScene().CreateEntity()),
 		m_Sub(le::Application::Get().GetEventBus())
 	{
-		le::Window& window = le::Application::Get().GetWindow();
+		le::Window& window = le::Application::Get().GetWindowManager().GetWindow();
 		window.AddInputListener(*this, le::InputType::KEY);
 		window.AddInputListener(*this, le::InputType::RAW_MOUSE_MOVE);
 		window.AddInputListener(*this, le::InputType::MOUSE_CLICK);
@@ -99,7 +99,7 @@ namespace mc
 
 			case le::Keycodes::KEY_ESCAPE:
 			{
-				le::Application::Get().GetWindow().SetCursorMode(Tether::Window::CursorMode::NORMAL);
+				le::Application::Get().GetWindowManager().GetWindow().SetCursorMode(Tether::Window::CursorMode::NORMAL);
 				m_CaptureMouse = false;
 			}
 			break;
@@ -126,7 +126,7 @@ namespace mc
 		le::Quaternion q = le::Math::AngleAxis(le::Math::Radians(vertical), le::Vector3f(1, 0, 0));
 		q *= le::Math::AngleAxis(le::Math::Radians(horizontal), le::Vector3f(0, 1, 0));
 
-		le::Window& window = le::Application::Get().GetWindow();
+		le::Window& window = le::Application::Get().GetWindowManager().GetWindow();
 		window.SetCursorPos(window.GetWidth() / 2, window.GetHeight() / 2);
 
 		m_cameraEntity.QueryComponents<le::Transform>([&](le::Transform& transform)
@@ -140,7 +140,7 @@ namespace mc
 		if (m_CaptureMouse)
 			return;
 
-		le::Application::Get().GetWindow().SetCursorMode(Tether::Window::CursorMode::DISABLED);
+		le::Application::Get().GetWindowManager().GetWindow().SetCursorMode(Tether::Window::CursorMode::DISABLED);
 		m_CaptureMouse = true;
 	}
 }

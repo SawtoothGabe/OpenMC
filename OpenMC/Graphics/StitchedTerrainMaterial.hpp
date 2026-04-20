@@ -27,7 +27,7 @@ namespace mc
 
         StitchedTerrainMaterial();
 
-        le::Material* Get() const;
+        le::Ref<le::Material> Get() const;
         SubtextureCoords GetCoordsAtIndex(size_t index) const;
         static FaceSubtextureIndices GetFaceSubtextureIndices(uint8_t blockID);
     private:

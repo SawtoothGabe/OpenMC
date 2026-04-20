@@ -18,7 +18,7 @@ namespace mc
 
         le::Application& app = le::Application::Get();
         m_entityID = creator.GetUID();
-        m_mesh = app.GetResourceManager().CreateResource<le::MeshData>(BLOCK_COUNT, BLOCK_COUNT,
+        m_mesh = le::MeshData::Create(BLOCK_COUNT, BLOCK_COUNT,
             le::MeshData::UpdateFrequency::UPDATES_OCCASIONALLY);
         m_Data = std::make_unique<uint8_t[]>(BLOCK_COUNT);
 
@@ -26,8 +26,8 @@ namespace mc
         transform.SetPosition(le::Vector3f(cx * WIDTH, 0, cz * LENGTH));
 
         le::Mesh mesh;
-        mesh.data = m_mesh->id;
-        mesh.material = material.Get()->id;
+        mesh.data = m_mesh;
+        mesh.material = material.Get();
 
         creator.AddComponent<le::Transform>(transform);
         creator.AddComponent<le::Mesh>(mesh);
@@ -55,7 +55,6 @@ namespace mc
             return;
 
         le::Application::Get().GetGlobalScene().EnqueueEntityDeletion(m_entityID);
-        le::Application::Get().GetResourceManager().Delete<le::MeshData>(m_mesh->id);
     }
 
     void Chunk::Generate()

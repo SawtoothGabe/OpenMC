@@ -4,12 +4,12 @@ namespace mc
 {
     StitchedTerrainMaterial::StitchedTerrainMaterial()
         :
-        m_Material(le::Application::Get().GetResourceManager().CreateResource<le::Material>())
+        m_Material(le::Material::Create())
     {
         const std::string path = "Assets/Common/res/TitleUpdate/res/terrain.png";
-        m_Texture = le::Application::Get().GetResourceManager().CreateResource<le::Texture2D>(le::TextureData::FromFile(path).get());
+        m_Texture = le::Texture2D::Create(le::TextureData::FromFile(path).get());
 
-        m_Material->SetTexture(m_Texture->id);
+        m_Material->SetTexture(m_Texture);
 
         m_Width = m_Texture->GetWidth();
         m_Height = m_Texture->GetHeight();
@@ -17,9 +17,9 @@ namespace mc
         m_Rows = m_Height / BLOCK_TEXTURE_HEIGHT;
     }
 
-    le::Material* StitchedTerrainMaterial::Get() const
+    le::Ref<le::Material> StitchedTerrainMaterial::Get() const
     {
-        return m_Material.get();
+        return m_Material;
     }
 
     StitchedTerrainMaterial::SubtextureCoords StitchedTerrainMaterial::GetCoordsAtIndex(const size_t index) const
