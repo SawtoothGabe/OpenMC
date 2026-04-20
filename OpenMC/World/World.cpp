@@ -35,13 +35,13 @@ namespace mc
 		if (!m_Chunks.contains(coord))
 			return 0;
 
-		const Chunk& chunk = m_Chunks.at(coord);
+		const Chunk& chunk = *m_Chunks.at(coord);
 		return chunk.GetBlock(chunkPosX, y, chunkPosZ);
 	}
 
-	Chunk& World::GetChunkAt(int cx, int cz)
+	Chunk& World::GetChunkAt(int cx, int cz) const
 	{
-		return m_Chunks.at(std::make_pair(cx, cz));
+		return *m_Chunks.at(std::make_pair(cx, cz));
 	}
 
 	bool World::IsChunkLoaded(int cx, int cz) const
@@ -74,20 +74,20 @@ namespace mc
 						continue;
 
 					std::pair<int, int> key = std::make_pair(x, z);
-					const Chunk& chunk = m_Chunks.insert(std::make_pair(key,
-						Chunk(*this, m_WorldMat, x, z))).first->second;
+					const le::Scope<Chunk>& chunk = m_Chunks.insert(std::make_pair(key,
+						std::make_unique<Chunk>(*this, m_WorldMat, x, z))).first->second;
 
-					UpdateIfNeighborsPresent(chunk, x, z);
+					UpdateIfNeighborsPresent(*chunk, x, z);
 					UpdateNeighbors(x, z);
 				}
 
-			std::vector<std::pair<int, int>> toRemove;
-			for (const auto& key : m_Chunks | std::views::keys)
-				if (DistanceFromChunk(key, playerPos) > VIEW_DISTANCE)
-					toRemove.push_back(key);
-
-			for (auto& key : toRemove)
-				m_Chunks.erase(key);
+			// std::vector<std::pair<int, int>> toRemove;
+			// for (const auto& key : m_Chunks | std::views::keys)
+			// 	if (DistanceFromChunk(key, playerPos) > VIEW_DISTANCE)
+			// 		toRemove.push_back(key);
+			//
+			// for (auto& key : toRemove)
+			// 	m_Chunks.erase(key);
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}

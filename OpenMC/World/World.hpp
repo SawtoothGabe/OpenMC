@@ -37,7 +37,7 @@ namespace mc
 		void UpdateNeighbors(int x, int z);
 		void UpdateIfNeighborsPresent(const Chunk& chunk, int x, int z) const;
 	private:
-		Chunk& GetChunkAt(int cx, int cz);
+		Chunk& GetChunkAt(int cx, int cz) const;
 		bool IsChunkLoaded(int cx, int cz) const;
 		static double DistanceFromChunk(const std::pair<int, int>& chunkPos, const le::Vector3f& playerPos);
 		void RunGeneration();
@@ -46,7 +46,7 @@ namespace mc
 
 		Player& m_Player;
 		std::atomic_bool m_IsRunning = false;
-		std::unordered_map<std::pair<int, int>, Chunk, PairHash> m_Chunks;
+		std::unordered_map<std::pair<int, int>, le::Scope<Chunk>, PairHash> m_Chunks;
 
 		StitchedTerrainMaterial& m_WorldMat;
 	};

@@ -19,8 +19,8 @@ namespace mc
 		using BlockID = uint8_t;
 
 		Chunk(World& world, StitchedTerrainMaterial& material, int cx, int cz);
-		Chunk(Chunk&& other) noexcept;
 		~Chunk();
+		LE_NO_COPY(Chunk);
 
 		void Generate();
 		void UpdateMesh() const;
@@ -58,7 +58,7 @@ namespace mc
 		World& m_World;
 		int m_Cx, m_Cz;
 
-		le::Ref<le::MeshData> m_mesh;
+		le::Ref<le::MeshData> m_mesh = nullptr;
 
 		le::Scope<BlockID[]> m_Data;
 		StitchedTerrainMaterial& m_Material;

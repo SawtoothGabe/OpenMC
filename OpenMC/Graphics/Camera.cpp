@@ -16,7 +16,6 @@ namespace mc
 
 		m_cameraEntity.AddComponent<le::Transform>();
 		m_cameraEntity.AddComponent<le::Camera>();
-		m_cameraEntity.AddComponent<le::ActiveCamera>();
 
 		m_cameraEntity.QueryComponents<le::Transform>([](le::Transform& transform)
 		{

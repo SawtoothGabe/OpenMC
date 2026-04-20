@@ -10,6 +10,7 @@ namespace mc
 	{
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
 		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
+		renderTarget.SetActiveCameraID(m_Player.GetCamera().GetEntity());
 
 		app.GetGlobalScene().SetAmbientLight(1.0f);
 

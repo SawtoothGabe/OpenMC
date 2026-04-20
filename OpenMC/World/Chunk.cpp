@@ -26,7 +26,7 @@ namespace mc
         transform.SetPosition(le::Vector3f(cx * WIDTH, 0, cz * LENGTH));
 
         le::Mesh mesh;
-        mesh.data = m_mesh;
+        //mesh.data = m_mesh;
         mesh.material = material.Get();
 
         creator.AddComponent<le::Transform>(transform);
@@ -34,19 +34,6 @@ namespace mc
         app.GetGlobalScene().EnqueueEntityCreation(std::move(creator));
 
         Generate();
-    }
-
-    Chunk::Chunk(Chunk &&other) noexcept
-        :
-        m_entityID(other.m_entityID),
-        m_World(other.m_World),
-        m_Cx(other.m_Cx),
-        m_Cz(other.m_Cz),
-        m_mesh(other.m_mesh),
-        m_Data(std::move(other.m_Data)),
-        m_Material(other.m_Material)
-    {
-        other.m_entityID = 0;
     }
 
     Chunk::~Chunk()
