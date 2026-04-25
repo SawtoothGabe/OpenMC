@@ -21,8 +21,8 @@ namespace mc
 
 		StitchedTerrainMaterial m_TerrainMat;
 
-		Player m_Player;
 		World m_World;
+		Player m_Player;
 
 		le::Stopwatch m_FpsTimer;
 		size_t m_Frames = 0;

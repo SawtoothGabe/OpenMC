@@ -27,11 +27,16 @@ namespace mc
 	public:
 		static constexpr int VIEW_DISTANCE = 4;
 
-		explicit World(Player& player, StitchedTerrainMaterial& worldMat);
+		explicit World(StitchedTerrainMaterial& worldMat);
 		~World();
 
+		void SetBlock(int x, int y, int z, Chunk::BlockID block) const;
+		uint8_t GetBlock(const le::Vector3f& position) const;
 		uint8_t GetBlockAt(int x, int y, int z) const;
+		void RebuildChunkAt(const le::Vector3f& position);
+		void RebuildChunkAt(int x, int y, int z) const;
 
+		le::Vector3f playerPos;
 		siv::PerlinNoise m_Noise;
 	protected:
 		void UpdateNeighbors(int x, int z);
@@ -39,12 +44,11 @@ namespace mc
 	private:
 		Chunk& GetChunkAt(int cx, int cz) const;
 		bool IsChunkLoaded(int cx, int cz) const;
-		static double DistanceFromChunk(const std::pair<int, int>& chunkPos, const le::Vector3f& playerPos);
+		double DistanceFromChunk(const std::pair<int, int>& chunkPos) const;
 		void RunGeneration();
 
 		std::jthread m_WorldGenThread;
 
-		Player& m_Player;
 		std::atomic_bool m_IsRunning = false;
 		std::unordered_map<std::pair<int, int>, le::Scope<Chunk>, PairHash> m_Chunks;
 

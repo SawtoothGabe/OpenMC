@@ -9,7 +9,7 @@ namespace mc
 	public:
 		Camera();
 
-		le::Entity GetEntity() const;
+		[[nodiscard]] le::Entity GetEntity() const;
 	private:
 		void OnUpdate(const le::UpdateEvent& e);
 		void OnKey(le::KeyInfo& info) override;

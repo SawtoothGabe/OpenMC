@@ -24,7 +24,8 @@ namespace mc
 
 		void Generate();
 		void UpdateMesh() const;
-		uint8_t GetBlock(int x, int y, int z) const;
+		void SetBlock(int x, int y, int z, BlockID block);
+		[[nodiscard]] uint8_t GetBlock(int x, int y, int z) const;
 
 		le::UID m_entityID;
 	private:

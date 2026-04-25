@@ -107,6 +107,11 @@ namespace mc
         m_mesh->Update(std::span(vertices), std::span(indices));
     }
 
+    void Chunk::SetBlock(const int x, const int y, const int z, const BlockID block)
+    {
+        m_Data[GetBlockIndex(x, y, z)] = block;
+    }
+
     uint8_t Chunk::GetBlockInBounds(const int x, const int y, const int z) const
     {
         if (y < 0)
@@ -122,7 +127,7 @@ namespace mc
         return m_Data[GetBlockIndex(x, y, z)];
     }
 
-    uint8_t Chunk::GetBlock(int x, int y, int z) const
+    uint8_t Chunk::GetBlock(const int x, const int y, const int z) const
     {
         if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT || z < 0 || z >= LENGTH)
             return 0;
@@ -152,7 +157,7 @@ namespace mc
         return index;
     }
 
-    size_t Chunk::GetCornerIndex(uint16_t x, uint16_t y, uint16_t z)
+    size_t Chunk::GetCornerIndex(const uint16_t x, const uint16_t y, const uint16_t z)
     {
         constexpr size_t WIDTH_P1 = WIDTH + 1;
         constexpr size_t WP1XLP1 = WIDTH_P1 * (LENGTH + 1);

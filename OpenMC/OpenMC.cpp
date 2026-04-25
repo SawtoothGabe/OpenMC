@@ -6,7 +6,8 @@ namespace mc
 		:
 		m_App(app),
 		m_Sub(app.GetEventBus()),
-		m_World(m_Player, m_TerrainMat)
+		m_World(m_TerrainMat),
+		m_Player(m_World)
 	{
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
 		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
@@ -33,6 +34,8 @@ namespace mc
 			m_FpsTimer.Set();
 			m_Frames = 0;
 		}
+
+		m_World.playerPos = m_Player.GetPosition();
 
 		m_Frames++;
 	}

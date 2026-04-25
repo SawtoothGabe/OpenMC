@@ -7,9 +7,8 @@
 
 namespace mc
 {
-	World::World(Player& player, StitchedTerrainMaterial& worldMat)
+	World::World(StitchedTerrainMaterial& worldMat)
 		:
-		m_Player(player),
 		m_WorldMat(worldMat)
 	{
 		m_IsRunning.store(true, std::memory_order_relaxed);
@@ -22,6 +21,30 @@ namespace mc
 
 		if (m_WorldGenThread.joinable())
 			m_WorldGenThread.join();
+	}
+
+	void World::SetBlock(const int x, const int y, const int z, const Chunk::BlockID block) const
+	{
+		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
+		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
+		const int chunkPosX = static_cast<uint64_t>(x) % Chunk::WIDTH;
+		const int chunkPosZ = static_cast<uint64_t>(z) % Chunk::LENGTH;
+		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
+
+		if (!m_Chunks.contains(coord))
+			return;
+
+		Chunk& chunk = *m_Chunks.at(coord);
+		chunk.SetBlock(chunkPosX, y, chunkPosZ, block);
+	}
+
+	uint8_t World::GetBlock(const le::Vector3f& position) const
+	{
+		return GetBlockAt(
+			std::floor(position.x),
+			std::floor(position.y),
+			std::floor(position.z)
+		);
 	}
 
 	uint8_t World::GetBlockAt(const int x, const int y, const int z) const
@@ -39,6 +62,19 @@ namespace mc
 		return chunk.GetBlock(chunkPosX, y, chunkPosZ);
 	}
 
+	void World::RebuildChunkAt(const le::Vector3f& position) {}
+	void World::RebuildChunkAt(int x, int y, int z) const
+	{
+		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
+		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
+		const int chunkPosX = static_cast<uint64_t>(x) % Chunk::WIDTH;
+		const int chunkPosZ = static_cast<uint64_t>(z) % Chunk::LENGTH;
+		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
+
+		if (!m_Chunks.contains(coord))
+			return;
+	}
+
 	Chunk& World::GetChunkAt(int cx, int cz) const
 	{
 		return *m_Chunks.at(std::make_pair(cx, cz));
@@ -53,7 +89,6 @@ namespace mc
 	{
 		while (m_IsRunning.load(std::memory_order_acquire))
 		{
-			const le::Vector3f playerPos = m_Player.GetPosAtomic();
 			const int playerChunkX = static_cast<int>(playerPos.x) / Chunk::WIDTH;
 			const int playerChunkZ = static_cast<int>(playerPos.z) / Chunk::LENGTH;
 
@@ -81,13 +116,14 @@ namespace mc
 					UpdateNeighbors(x, z);
 				}
 
-			// std::vector<std::pair<int, int>> toRemove;
-			// for (const auto& key : m_Chunks | std::views::keys)
-			// 	if (DistanceFromChunk(key, playerPos) > VIEW_DISTANCE)
-			// 		toRemove.push_back(key);
-			//
-			// for (auto& key : toRemove)
-			// 	m_Chunks.erase(key);
+			constexpr float deletionMarginBlocks = 17.0f;
+			std::vector<std::pair<int, int>> toRemove;
+			for (const auto& key : m_Chunks | std::views::keys)
+				if (DistanceFromChunk(key) > VIEW_DISTANCE * Chunk::LENGTH + deletionMarginBlocks)
+					toRemove.push_back(key);
+
+			for (auto& key : toRemove)
+				m_Chunks.erase(key);
 
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
@@ -105,7 +141,7 @@ namespace mc
 			GetChunkAt(x, z + 1).UpdateMesh();
 	}
 
-	void World::UpdateIfNeighborsPresent(const Chunk& chunk, int x, int z) const
+	void World::UpdateIfNeighborsPresent(const Chunk& chunk, const int x, const int z) const
 	{
 		bool present = IsChunkLoaded(x - 1, z);
 		present |= IsChunkLoaded(x + 1, z);
@@ -116,7 +152,7 @@ namespace mc
 			chunk.UpdateMesh();
 	}
 
-	double World::DistanceFromChunk(const std::pair<int, int>& chunkPos, const le::Vector3f& playerPos)
+	double World::DistanceFromChunk(const std::pair<int, int>& chunkPos) const
 	{
  		const int chunkWorldX = chunkPos.first * Chunk::WIDTH;
 		const int chunkWorldZ = chunkPos.second * Chunk::LENGTH;
