@@ -26,7 +26,7 @@ namespace mc
         transform.SetPosition(le::Vector3f(cx * WIDTH, 0, cz * LENGTH));
 
         le::Mesh mesh;
-        //mesh.data = m_mesh;
+        mesh.data = m_mesh;
         mesh.material = material.Get();
 
         creator.AddComponent<le::Transform>(transform);
@@ -169,7 +169,7 @@ namespace mc
     {
         const le::Vector3f world = pos + block;
 
-        le::MeshData::Vertex3 vertex;
+        le::MeshData::Vertex3 vertex{};
         vertex.position[0] = world.x;
         vertex.position[1] = world.y;
         vertex.position[2] = world.z;
@@ -185,12 +185,12 @@ namespace mc
     void Chunk::AddFace(Indices& i, const size_t i0, const size_t i1,
         const size_t i2, const size_t i3)
     {
+        i.push_back(i2);
+        i.push_back(i1);
         i.push_back(i0);
-        i.push_back(i1);
         i.push_back(i2);
-        i.push_back(i1);
         i.push_back(i3);
-        i.push_back(i2);
+        i.push_back(i1);
     }
 
     void Chunk::AddNorthFace(Vertices& v, Indices& i, const le::Vector3f& pos, 
