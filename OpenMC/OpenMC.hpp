@@ -16,10 +16,15 @@ namespace mc
 
 		void Update(const le::UpdateEvent& event);
 	private:
+		static le::Ref<le::MeshData> CreateBlockSelectorMesh();
+
 		le::Application& m_App;
 		le::EventBusSubscriber m_Sub;
 
 		StitchedTerrainMaterial m_TerrainMat;
+
+		le::Ref<le::Material> m_blockSelectorMat;
+		le::Ref<le::MeshData> m_blockSelectorMesh;
 
 		World m_World;
 		Player m_Player;

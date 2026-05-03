@@ -7,7 +7,9 @@ namespace mc
 		m_App(app),
 		m_Sub(app.GetEventBus()),
 		m_World(m_TerrainMat),
-		m_Player(m_World)
+		m_blockSelectorMat(le::Material::Create()),
+		m_blockSelectorMesh(CreateBlockSelectorMesh()),
+		m_Player(m_blockSelectorMat, m_blockSelectorMesh, m_World)
 	{
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
 		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
@@ -38,5 +40,46 @@ namespace mc
 		m_World.playerPos = m_Player.GetPosition();
 
 		m_Frames++;
+	}
+
+	le::Ref<le::MeshData> OpenMC::CreateBlockSelectorMesh()
+	{
+		le::MeshData::Vertex3 testVertices[] =
+		{
+			{0.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{1.0f, 0.0f, 0.0f, 0.0f, 0.0f},
+			{0.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+			{1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+			{0.0f, 1.0f, 0.0f, 0.0f, 0.0f},
+			{1.0f, 1.0f, 0.0f, 0.0f, 0.0f},
+			{0.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+			{1.0f, 1.0f, 1.0f, 0.0f, 0.0f},
+		};
+
+		uint32_t indices[] =
+		{
+			// Bottom
+			0, 1,
+			1, 4,
+			4, 3,
+			3, 0,
+
+			// Top
+			4, 5,
+			5, 7,
+			7, 6,
+			6, 4,
+
+			// Sides
+			0, 4,
+			1, 5,
+			2, 6,
+			3, 7,
+		};
+
+		return le::MeshData::Create(
+			std::span<le::MeshData::Vertex3>(testVertices),
+			std::span<uint32_t>(indices), le::MeshData::UpdateFrequency::UPDATES_ONCE
+		);
 	}
 }

@@ -41,9 +41,9 @@ namespace mc
 	uint8_t World::GetBlock(const le::Vector3f& position) const
 	{
 		return GetBlockAt(
-			std::floor(position.x),
-			std::floor(position.y),
-			std::floor(position.z)
+			position.x,
+			position.y,
+			position.z
 		);
 	}
 
@@ -62,17 +62,25 @@ namespace mc
 		return chunk.GetBlock(chunkPosX, y, chunkPosZ);
 	}
 
-	void World::RebuildChunkAt(const le::Vector3f& position) {}
-	void World::RebuildChunkAt(int x, int y, int z) const
+	void World::RebuildChunkAt(const le::Vector3f& position) const
+	{
+		RebuildChunkAt(
+			std::floor(position.x),
+			std::floor(position.z)
+		);
+	}
+
+	void World::RebuildChunkAt(const int x, const int z) const
 	{
 		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
 		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
-		const int chunkPosX = static_cast<uint64_t>(x) % Chunk::WIDTH;
-		const int chunkPosZ = static_cast<uint64_t>(z) % Chunk::LENGTH;
 		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
 
 		if (!m_Chunks.contains(coord))
 			return;
+
+		const Chunk& chunk = *m_Chunks.at(coord);
+		chunk.UpdateMesh();
 	}
 
 	Chunk& World::GetChunkAt(int cx, int cz) const

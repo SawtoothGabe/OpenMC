@@ -33,8 +33,8 @@ namespace mc
 		void SetBlock(int x, int y, int z, Chunk::BlockID block) const;
 		uint8_t GetBlock(const le::Vector3f& position) const;
 		uint8_t GetBlockAt(int x, int y, int z) const;
-		void RebuildChunkAt(const le::Vector3f& position);
-		void RebuildChunkAt(int x, int y, int z) const;
+		void RebuildChunkAt(const le::Vector3f& position) const;
+		void RebuildChunkAt(int x, int z) const;
 
 		le::Vector3f playerPos;
 		siv::PerlinNoise m_Noise;
