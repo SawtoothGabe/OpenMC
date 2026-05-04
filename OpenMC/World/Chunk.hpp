@@ -11,9 +11,9 @@ namespace mc
 	class Chunk
 	{
 	public:
-		static constexpr int64_t WIDTH = 16;
-		static constexpr int64_t LENGTH = 16;
-		static constexpr int64_t HEIGHT = 256;
+		static constexpr int WIDTH = 16;
+		static constexpr int LENGTH = 16;
+		static constexpr int HEIGHT = 256;
 		static constexpr size_t BLOCK_COUNT = WIDTH * HEIGHT * LENGTH;
 		
 		using BlockID = uint8_t;

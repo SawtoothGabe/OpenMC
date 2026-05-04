@@ -12,29 +12,35 @@ namespace mc
 		m_blockSelectorMesh(blockSelectorMesh),
 		m_sub(le::Application::Get().GetEventBus())
 	{
+		m_raycastMat = le::Material::Create();
+		m_raycastMesh = le::MeshData::Create(2, 2, le::MeshData::UpdateFrequency::UPDATES_OCCASIONALLY);
+		m_raycastMesh->SetTopology(le::PrimitiveTopology::LINE_LIST);
+		m_raycastMat->SetColor(le::Color(0.0f, 1.0f, 0.0f, 1.0f));
+
 		le::Application& app = le::Application::Get();
 		le::Window& window = app.GetWindowManager().GetWindow();
 		window.AddInputListener(*this, le::InputType::MOUSE_CLICK);
+		window.AddInputListener(*this, le::InputType::KEY);
 
 		m_blockSelector = app.GetGlobalScene().CreateEntity();
 		m_blockSelector.AddComponent<le::Transform>();
 		m_blockSelector.AddComponent<le::Mesh>(le::Mesh{true, blockSelectorMesh, blockSelectorMat});
 
+		m_raycast = app.GetGlobalScene().CreateEntity();
+		m_raycast.AddComponent<le::Transform>();
+		m_raycast.AddComponent<le::Mesh>();
+
+		m_raycast.QueryComponents<le::Mesh>([this](le::Mesh& mesh)
+		{
+			mesh.material = m_raycastMat;
+			mesh.data = m_raycastMesh;
+		});
+
 		m_sub.AddEventHandler<le::UpdateEvent>([this](const le::UpdateEvent&)
 		{
-			m_lookAtPos = FindLookAtPos();
 			m_blockSelector.QueryComponents<le::Mesh, le::Transform>([&](le::Mesh& mesh, le::Transform& transform)
 			{
-				mesh.enabled = m_lookAtPos.has_value();
-				if (mesh.enabled)
-				{
-					const le::Vector3f pos = m_lookAtPos.value();
-					transform.SetPosition({
-						std::floor(pos.x),
-						std::floor(pos.y),
-						std::floor(pos.z),
-					});
-				}
+				transform.SetPosition(roundedPos);
 			});
 		});
 	}
@@ -42,6 +48,7 @@ namespace mc
 	Player::~Player()
 	{
 		le::Application::Get().GetGlobalScene().DeleteEntity(m_blockSelector);
+		le::Application::Get().GetGlobalScene().DeleteEntity(m_raycast);
 	}
 
 	le::Vector3f Player::GetPosition() const
@@ -74,27 +81,60 @@ namespace mc
 		m_world.RebuildChunkAt(currentPos);
 	}
 
-	std::optional<le::Vector3f> Player::FindLookAtPos() const
+	void Player::OnKey(le::Input::KeyInfo& info)
+	{
+		if (!info.IsPressed())
+			return;
+
+		if (info.GetKey() == Tether::KEY_F)
+		{
+			FindLookAtPos();
+
+			le::MeshData::Vertex3 testVertices[] =
+			{
+				{pos.x, pos.y, pos.z, 0.0f, 0.0f},
+				{end.x, end.y, end.z, 0.0f, 0.0f},
+			};
+
+			uint32_t indices[] = { 0, 1 };
+
+			m_raycastMesh->Update(std::span<le::MeshData::Vertex3>(testVertices),
+				std::span<uint32_t>(indices));
+		}
+
+		if (info.GetKey() == Tether::KEY_R)
+			StepBlockSearch();
+	}
+
+	void Player::FindLookAtPos()
 	{
 		constexpr float reachBlocks = 50.0f;
 
-		const le::Vector3f pos = GetPosition();
-		const le::Vector3f forward = m_Camera.GetEntity().GetComponentData<le::Camera>().GetForwardVector();
-		const le::Vector3f end = pos + forward * reachBlocks;
-		le::Vector3f delta = end - pos;
+		pos = GetPosition();
+		forward = m_Camera.GetEntity().GetComponentData<le::Camera>().GetForwardVector();
+		delta = forward * reachBlocks;
+		end = pos + delta;
 
-		const float step = std::abs(delta.Max());
+		step = std::abs(delta.Max());
 		delta /= step;
 
-		le::Vector3f currentPos = pos;
-		for (int i = 0; i <= static_cast<int>(std::floor(step)); i++)
-		{
-			if (m_world.GetBlock(currentPos))
-				return currentPos;
+		currentPos = pos;
+		i = 0;
+	}
 
-			currentPos += delta;
-		}
+	void Player::StepBlockSearch()
+	{
+		if (i > static_cast<int>(std::floor(step)))
+			return;
 
-		return std::nullopt;
+		roundedPos = le::Vector3f(std::floor(currentPos.x), std::floor(currentPos.y), std::floor(currentPos.z));
+		if (m_world.GetBlockAt(
+			static_cast<int>(roundedPos.x),
+			static_cast<int>(roundedPos.y),
+			static_cast<int>(roundedPos.z)))
+			return;
+
+		currentPos += delta;
+		i++;
 	}
 }

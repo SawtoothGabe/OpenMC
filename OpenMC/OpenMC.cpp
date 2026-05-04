@@ -11,6 +11,8 @@ namespace mc
 		m_blockSelectorMesh(CreateBlockSelectorMesh()),
 		m_Player(m_blockSelectorMat, m_blockSelectorMesh, m_World)
 	{
+		m_blockSelectorMesh->SetTopology(le::PrimitiveTopology::LINE_LIST);
+
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
 		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
 		renderTarget.SetActiveCameraID(m_Player.GetCamera().GetEntity());

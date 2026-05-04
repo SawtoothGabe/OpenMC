@@ -38,15 +38,6 @@ namespace mc
 		chunk.SetBlock(chunkPosX, y, chunkPosZ, block);
 	}
 
-	uint8_t World::GetBlock(const le::Vector3f& position) const
-	{
-		return GetBlockAt(
-			position.x,
-			position.y,
-			position.z
-		);
-	}
-
 	uint8_t World::GetBlockAt(const int x, const int y, const int z) const
 	{
 		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
