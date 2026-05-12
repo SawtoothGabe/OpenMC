@@ -61,14 +61,29 @@ namespace mc
 		if (!m_lookAtPos)
 			return;
 
-		const le::Vector3f currentPos = m_lookAtPos.value();
+		le::Vector3f block = m_lookAtPos.value();
 
-		const Chunk::BlockID block = clickType == ClickType::LEFT_BUTTON ? 0 : 1;
-		m_world.SetBlock(currentPos.x, currentPos.y, currentPos.z, block);
-		m_world.RebuildChunkAt(currentPos);
+		if (clickType == ClickType::LEFT_BUTTON)
+			m_world.SetBlock(std::floor(block.x), std::floor(block.y), std::floor(block.z), 0);
+		else
+		{
+			switch (m_targetFace)
+			{
+				case Block::Face::NORTH: block.z -= 1.0f; break;
+				case Block::Face::SOUTH: block.z += 1.0f; break;
+				case Block::Face::EAST: block.x += 1.0f; break;
+				case Block::Face::WEST: block.x -= 1.0f; break;
+				case Block::Face::TOP: block.y += 1.0f; break;
+				case Block::Face::BOTTOM: block.y -= 1.0f; break;
+			}
+
+			m_world.SetBlock(std::floor(block.x), std::floor(block.y), std::floor(block.z), 1);
+		}
+
+		m_world.RebuildChunkAt(block);
 	}
 
-	std::optional<le::Vector3f> Player::FindLookAtPos() const
+	std::optional<le::Vector3f> Player::FindLookAtPos()
 	{
 		const le::Vector3f camPos = m_Camera.GetEntity().GetComponentData<le::Transform>().GetPosition();
 		const le::Vector3f camDir = m_Camera.GetEntity().GetComponentData<le::Camera>().GetForwardVector();
@@ -98,10 +113,22 @@ namespace mc
 
 		constexpr float reach = 5.0f;
 
+		int axis = 0;
 		while (World::IsWithinWorld(coord) && ray.org.Distance(coord) < reach)
 		{
 			if (m_world.GetBlockAt(std::floor(coord.x), std::floor(coord.y), std::floor(coord.z)))
+			{
+				switch (axis)
+				{
+					case 0: m_targetFace = step.x < 0.0f ? Block::Face::EAST : Block::Face::WEST; break;
+					case 1: m_targetFace = step.y < 0.0f ? Block::Face::TOP : Block::Face::BOTTOM; break;
+					case 2: m_targetFace = step.z < 0.0f ? Block::Face::SOUTH : Block::Face::NORTH; break;
+
+					default: LE_ASSERT(false, "Invalid axis"); break;
+				}
+
 				return coord.Floored();
+			}
 
 			if (t.x < t.y)
 			{
@@ -109,11 +136,13 @@ namespace mc
 				{
 					coord.x += step.x;
 					t.x += delta.x;
+					axis = 0;
 				}
 				else
 				{
 					coord.z += step.z;
 					t.z += delta.z;
+					axis = 2;
 				}
 			}
 			else
@@ -122,11 +151,13 @@ namespace mc
 				{
 					coord.y += step.y;
 					t.y += delta.y;
+					axis = 1;
 				}
 				else
 				{
 					coord.z += step.z;
 					t.z += delta.z;
+					axis = 2;
 				}
 			}
 		}

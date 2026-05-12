@@ -8,4 +8,5 @@ add_executable(${PROJECT_NAME} ${OPENMC_SOURCES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY DEBUGGER_WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")
 
+target_include_directories(${PROJECT_NAME} PUBLIC OpenMC)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LE_LIBRARIES})

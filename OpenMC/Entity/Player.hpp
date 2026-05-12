@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Graphics/Camera.hpp"
+#include "World/Block.hpp"
 
 namespace mc
 {
@@ -16,7 +17,7 @@ namespace mc
 		const Camera& GetCamera() const;
 	private:
 		void OnMouseClick(Tether::Input::MouseClickInfo& info) override;
-		std::optional<le::Vector3f> FindLookAtPos() const;
+		std::optional<le::Vector3f> FindLookAtPos();
 		le::Vector3f GetRayStart() const;
 
 		World& m_world;
@@ -27,6 +28,7 @@ namespace mc
 		le::Entity m_blockSelector;
 
 		std::optional<le::Vector3f> m_lookAtPos;
+		Block::Face m_targetFace = Block::Face::NORTH;
 
 		le::EventBusSubscriber m_sub;
 	};
