@@ -160,4 +160,18 @@ namespace mc
 
 		return std::sqrt(std::abs(xDistSqr + zDistSqr));
 	}
+
+	bool World::IsWithinWorld(const le::Vector3f& position)
+	{
+		return position.y >= 0.0f && position.y < static_cast<float>(Chunk::HEIGHT);
+	}
+
+	le::Vector3f World::CoordClamped(const le::Vector3f& position)
+	{
+		return {
+			position.x,
+			std::clamp(position.y, 0.0f, static_cast<float>(Chunk::HEIGHT)),
+			position.z
+		};
+	}
 }

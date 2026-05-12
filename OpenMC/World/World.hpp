@@ -35,6 +35,9 @@ namespace mc
 		void RebuildChunkAt(const le::Vector3f& position) const;
 		void RebuildChunkAt(int x, int z) const;
 
+		static bool IsWithinWorld(const le::Vector3f& position);
+		static le::Vector3f CoordClamped(const le::Vector3f& position);
+
 		le::Vector3f playerPos;
 		siv::PerlinNoise m_Noise;
 	protected:
