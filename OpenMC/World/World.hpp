@@ -40,10 +40,13 @@ namespace mc
 
 		le::Vector3f playerPos;
 		siv::PerlinNoise m_Noise;
+		le::Scene scene;
 	protected:
 		void UpdateNeighbors(int x, int z);
 		void UpdateIfNeighborsPresent(const Chunk& chunk, int x, int z) const;
 	private:
+		void ProcessPhysics(float delta);
+
 		Chunk& GetChunkAt(int cx, int cz) const;
 		bool IsChunkLoaded(int cx, int cz) const;
 		double DistanceFromChunk(const std::pair<int, int>& chunkPos) const;
@@ -55,5 +58,6 @@ namespace mc
 		std::unordered_map<std::pair<int, int>, le::Scope<Chunk>, PairHash> m_Chunks;
 
 		StitchedTerrainMaterial& m_WorldMat;
+		le::EventBusSubscriber m_sub;
 	};
 }

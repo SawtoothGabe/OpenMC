@@ -15,8 +15,6 @@ namespace mc
         m_Material(material)
     {
         le::EntityCreator creator;
-
-        le::Application& app = le::Application::Get();
         m_entityID = creator.GetUID();
         m_mesh = le::MeshData::Create(BLOCK_COUNT, BLOCK_COUNT,
             le::MeshData::UpdateFrequency::UPDATES_OCCASIONALLY);
@@ -31,7 +29,7 @@ namespace mc
 
         creator.AddComponent<le::Transform>(transform);
         creator.AddComponent<le::Mesh>(mesh);
-        app.GetGlobalScene().EnqueueEntityCreation(std::move(creator));
+        m_World.scene.EnqueueEntityCreation(std::move(creator));
 
         Generate();
     }
@@ -41,7 +39,7 @@ namespace mc
         if (m_entityID == 0)
             return;
 
-        le::Application::Get().GetGlobalScene().EnqueueEntityDeletion(m_entityID);
+        m_World.scene.EnqueueEntityDeletion(m_entityID);
     }
 
     void Chunk::Generate()

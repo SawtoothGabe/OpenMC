@@ -15,12 +15,12 @@ namespace mc
 
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
 		renderTarget.SetClearColor({ 0.47f, 0.65f, 1.0f, 1.0f });
-		renderTarget.SetActiveCameraID(m_Player.GetCamera().GetEntity());
-
-		app.GetGlobalScene().SetAmbientLight(1.0f);
+		renderTarget.SetActiveCameraID(m_Player.GetCamera());
 
 		m_Sub.AddEventHandler<le::UpdateEvent>(
 			[this](const le::UpdateEvent& event) { Update(event); });
+
+		m_App.SetActiveScene(m_World.scene);
 
 		le::Window& window = m_App.GetWindowManager().GetWindow();
 		// window.SetCursorMode(Tether::Window::CursorMode::DISABLED);

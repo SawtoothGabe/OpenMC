@@ -3,16 +3,21 @@
 #include <ranges>
 #include <utility>
 
-#include "../Entity/Player.hpp"
+#include "Components/PhysicsBody.hpp"
+#include "Entity/Player.hpp"
 
 namespace mc
 {
 	World::World(StitchedTerrainMaterial& worldMat)
 		:
-		m_WorldMat(worldMat)
+		m_WorldMat(worldMat),
+		m_sub(le::Application::Get().GetEventBus())
 	{
 		m_IsRunning.store(true, std::memory_order_relaxed);
 		m_WorldGenThread = std::jthread(&World::RunGeneration, this);
+		scene.SetAmbientLight(1.0f);
+
+		m_sub.AddEventHandler<le::UpdateEvent>([this](const le::UpdateEvent& e) { ProcessPhysics(e.GetDeltaTime()); });
 	}
 
 	World::~World()
@@ -173,5 +178,14 @@ namespace mc
 			std::clamp(position.y, 0.0f, static_cast<float>(Chunk::HEIGHT)),
 			position.z
 		};
+	}
+
+	void World::ProcessPhysics(float delta)
+	{
+		scene.QueryComponents<le::Transform, PhysicsBody>([delta](le::Transform& transform, PhysicsBody& body)
+		{
+			transform.AddPosition(body.velocity * delta);
+			body.velocity *= std::pow(body.drag, delta);
+		});
 	}
 }
