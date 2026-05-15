@@ -1,11 +1,12 @@
 #pragma once
+
 #include <thread>
-
-#include "Chunk.hpp"
-
 #include <typeindex>
 
-#include "../Common/PerlinNoise.hpp"
+#include "Chunk.hpp"
+#include "Common/PerlinNoise.hpp"
+
+#include <LE/LegendEngine.hpp>
 
 namespace mc
 {
@@ -22,7 +23,7 @@ namespace mc
 		}
 	};
 
-	class World
+	class World final
 	{
 	public:
 		static constexpr int VIEW_DISTANCE = 4;
@@ -30,10 +31,10 @@ namespace mc
 		explicit World(StitchedTerrainMaterial& worldMat);
 		~World();
 
-		void SetBlock(int x, int y, int z, Chunk::BlockID block) const;
-		uint8_t GetBlockAt(int x, int y, int z) const;
-		void RebuildChunkAt(const le::Vector3f& position) const;
-		void RebuildChunkAt(int x, int z) const;
+		void SetBlock(int x, int y, int z, Chunk::BlockID block);
+		uint8_t GetBlockAt(int x, int y, int z);
+		void RebuildChunkAt(const le::Vector3f& position);
+		void RebuildChunkAt(int x, int z);
 
 		static bool IsWithinWorld(const le::Vector3f& position);
 		static le::Vector3f CoordClamped(const le::Vector3f& position);
@@ -43,21 +44,25 @@ namespace mc
 		le::Scene scene;
 	protected:
 		void UpdateNeighbors(int x, int z);
-		void UpdateIfNeighborsPresent(const Chunk& chunk, int x, int z) const;
+		void UpdateIfNeighborsPresent(const Chunk& chunk, int x, int z);
 	private:
 		void ProcessPhysics(float delta);
+		void FindColliders(le::AABB region);
 
 		Chunk& GetChunkAt(int cx, int cz) const;
-		bool IsChunkLoaded(int cx, int cz) const;
+		bool IsChunkLoaded(int cx, int cz);
 		double DistanceFromChunk(const std::pair<int, int>& chunkPos) const;
 		void RunGeneration();
 
 		std::jthread m_WorldGenThread;
 
 		std::atomic_bool m_IsRunning = false;
+		std::recursive_mutex m_chunksMutex;
 		std::unordered_map<std::pair<int, int>, le::Scope<Chunk>, PairHash> m_Chunks;
 
 		StitchedTerrainMaterial& m_WorldMat;
 		le::EventBusSubscriber m_sub;
+
+		std::vector<le::AABB> m_colliders;
 	};
 }

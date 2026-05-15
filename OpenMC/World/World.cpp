@@ -28,13 +28,15 @@ namespace mc
 			m_WorldGenThread.join();
 	}
 
-	void World::SetBlock(const int x, const int y, const int z, const Chunk::BlockID block) const
+	void World::SetBlock(const int x, const int y, const int z, const Chunk::BlockID block)
 	{
 		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
 		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
 		const int chunkPosX = static_cast<uint64_t>(x) % Chunk::WIDTH;
 		const int chunkPosZ = static_cast<uint64_t>(z) % Chunk::LENGTH;
 		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
+
+		std::scoped_lock lock(m_chunksMutex);
 
 		if (!m_Chunks.contains(coord))
 			return;
@@ -43,13 +45,15 @@ namespace mc
 		chunk.SetBlock(chunkPosX, y, chunkPosZ, block);
 	}
 
-	uint8_t World::GetBlockAt(const int x, const int y, const int z) const
+	uint8_t World::GetBlockAt(const int x, const int y, const int z)
 	{
 		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
 		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
 		const int chunkPosX = static_cast<uint64_t>(x) % Chunk::WIDTH;
 		const int chunkPosZ = static_cast<uint64_t>(z) % Chunk::LENGTH;
 		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
+
+		std::scoped_lock lock(m_chunksMutex);
 
 		if (!m_Chunks.contains(coord))
 			return 0;
@@ -58,7 +62,7 @@ namespace mc
 		return chunk.GetBlock(chunkPosX, y, chunkPosZ);
 	}
 
-	void World::RebuildChunkAt(const le::Vector3f& position) const
+	void World::RebuildChunkAt(const le::Vector3f& position)
 	{
 		RebuildChunkAt(
 			std::floor(position.x),
@@ -66,11 +70,13 @@ namespace mc
 		);
 	}
 
-	void World::RebuildChunkAt(const int x, const int z) const
+	void World::RebuildChunkAt(const int x, const int z)
 	{
 		int chunkX = std::floor(x / static_cast<float>(Chunk::WIDTH));
 		int chunkZ = std::floor(z / static_cast<float>(Chunk::LENGTH));
 		const std::pair<int, int> coord = std::make_pair(chunkX, chunkZ);
+
+		std::scoped_lock lock(m_chunksMutex);
 
 		if (!m_Chunks.contains(coord))
 			return;
@@ -84,7 +90,7 @@ namespace mc
 		return *m_Chunks.at(std::make_pair(cx, cz));
 	}
 
-	bool World::IsChunkLoaded(int cx, int cz) const
+	bool World::IsChunkLoaded(int cx, int cz)
 	{
 		return m_Chunks.contains(std::make_pair(cx, cz));
 	}
@@ -99,8 +105,11 @@ namespace mc
 			for (int z = playerChunkZ - VIEW_DISTANCE; z < playerChunkZ + VIEW_DISTANCE; z++)
 				for (int x = playerChunkX - VIEW_DISTANCE; x < playerChunkX + VIEW_DISTANCE; x++)
 				{
-					if (IsChunkLoaded(x, z))
-						continue;
+					{
+						std::scoped_lock lock(m_chunksMutex);
+						if (IsChunkLoaded(x, z))
+							continue;
+					}
 
 					if (!m_IsRunning.load(std::memory_order_acquire))
 						return;
@@ -113,10 +122,13 @@ namespace mc
 						continue;
 
 					std::pair<int, int> key = std::make_pair(x, z);
-					const le::Scope<Chunk>& chunk = m_Chunks.insert(std::make_pair(key,
-						std::make_unique<Chunk>(*this, m_WorldMat, x, z))).first->second;
 
-					UpdateIfNeighborsPresent(*chunk, x, z);
+					auto chunk = std::make_unique<Chunk>(*this, m_WorldMat, x, z);
+
+					std::scoped_lock lock(m_chunksMutex);
+					const le::Scope<Chunk>& newChunk = m_Chunks.insert(std::make_pair(key, std::move(chunk))).first->second;
+
+					UpdateIfNeighborsPresent(*newChunk, x, z);
 					UpdateNeighbors(x, z);
 				}
 
@@ -145,7 +157,7 @@ namespace mc
 			GetChunkAt(x, z + 1).UpdateMesh();
 	}
 
-	void World::UpdateIfNeighborsPresent(const Chunk& chunk, const int x, const int z) const
+	void World::UpdateIfNeighborsPresent(const Chunk& chunk, const int x, const int z)
 	{
 		bool present = IsChunkLoaded(x - 1, z);
 		present |= IsChunkLoaded(x + 1, z);
@@ -182,10 +194,50 @@ namespace mc
 
 	void World::ProcessPhysics(float delta)
 	{
-		scene.QueryComponents<le::Transform, PhysicsBody>([delta](le::Transform& transform, PhysicsBody& body)
+		scene.QueryComponents<le::Transform, PhysicsBody>([this, delta](le::Transform& transform, PhysicsBody& body)
 		{
-			transform.AddPosition(body.velocity * delta);
-			body.velocity *= std::pow(body.drag, delta);
+			float dragCoefficient = std::pow(body.drag, delta * 1000.0f);
+			body.velocity.x *= dragCoefficient;
+			body.velocity.z *= dragCoefficient;
+
+			body.velocity.y += body.gravity * delta / 20.0f;
+
+			le::Vector3f movement = body.velocity * delta * 20.0f;
+			const le::Vector3f originalMovement = movement;
+
+			const le::AABB aabb = body.aabb.Moved(transform.GetPosition());
+			FindColliders(aabb.Expanded(body.velocity).Grown(1.0f));
+
+			for (le::AABB collider : m_colliders)
+				movement = aabb.GetClip(collider, movement);
+
+			body.onGround = movement.y != originalMovement.y;
+
+			if (movement.x != originalMovement.x)
+				body.velocity.x = 0.0f;
+			if (body.onGround)
+				body.velocity.y = 0.0f;
+			if (movement.z != originalMovement.z)
+				body.velocity.z = 0.0f;
+
+			transform.AddPosition(movement);
 		});
+	}
+
+	void World::FindColliders(le::AABB region)
+	{
+		m_colliders.clear();
+
+		// This assumes the coordinates of min are always smaller than max
+
+		for (int z = std::floor(region.min.z); z <= std::ceil(region.max.z); z++)
+			for (int y = std::floor(region.min.y); y <= std::ceil(region.max.y); y++)
+				for (int x = std::floor(region.min.x); x <= std::ceil(region.max.x); x++)
+				{
+					if (!GetBlockAt(x, y, z))
+						continue;
+
+					m_colliders.emplace_back(le::Vector3f(x, y, z), le::Vector3f(x + 1, y + 1, z + 1));
+				}
 	}
 }

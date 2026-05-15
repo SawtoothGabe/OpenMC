@@ -16,6 +16,13 @@ namespace mc
 		m_entity = m_world.scene.CreateEntity();
 		m_entity.AddComponent<le::Transform>();
 		m_entity.AddComponent<PhysicsBody>();
+		m_entity.QueryComponents<le::Transform, PhysicsBody>([](le::Transform& transform, PhysicsBody& body)
+		{
+			transform.SetPosition(le::Vector3f(0.0f, 60.0f, 0.0f));
+
+			body.aabb.min = le::Vector3f(-0.15f, 0.0f, -0.15f);
+			body.aabb.max = le::Vector3f(0.15f, 1.8f, 0.15f);
+		});
 
 		le::Window& window = le::Application::Get().GetWindowManager().GetWindow();
 		window.AddInputListener(*this, le::InputType::KEY);
@@ -171,7 +178,7 @@ namespace mc
 
 		float speed = 4.3f;
 		if (keys.ctrl)
-			speed *= 8.0f;
+			speed *= 1.3f;
 
 		direction *= speed;
 
@@ -181,10 +188,8 @@ namespace mc
 			body.velocity += cameraData.GetRightVector() * direction.y * delta;
 
 			// Vertical movement
-			if (keys.space)
-				body.velocity += le::Vector3f(0, speed, 0) * delta;
-			if (keys.shift)
-				body.velocity += le::Vector3f(0, -speed, 0) * delta;
+			if (keys.space && body.onGround)
+				body.velocity += le::Vector3f(0, 0.5f, 0);
 		});
 
 		m_camera.QueryComponents<le::Transform>([&](le::Transform& transform)
