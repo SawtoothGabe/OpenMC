@@ -11,6 +11,7 @@ namespace mc
 		m_blockSelectorMesh(CreateBlockSelectorMesh()),
 		m_Player(m_blockSelectorMat, m_blockSelectorMesh, m_World)
 	{
+		m_blockSelectorMat->SetColor(le::Color(0.0f, 0.0f, 0.0f, 1.0f));
 		m_blockSelectorMesh->SetTopology(le::PrimitiveTopology::LINE_LIST);
 
 		le::RenderTarget& renderTarget = app.GetWindowManager().GetRenderTarget();
