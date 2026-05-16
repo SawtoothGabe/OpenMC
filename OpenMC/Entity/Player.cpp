@@ -36,6 +36,11 @@ namespace mc
 		m_camera = world.scene.CreateEntity();
 		m_camera.AddComponent<le::Transform>();
 		m_camera.AddComponent<le::Camera>();
+		m_camera.QueryComponents<le::Camera>([](le::Camera& camera)
+		{
+			camera.SetNearZ(0.05f);
+			camera.SetFarZ(500.0f);
+		});
 
 		m_sub.AddEventHandler<le::UpdateEvent>([this](const le::UpdateEvent& e){ OnUpdate(e); });
 	}
