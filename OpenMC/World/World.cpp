@@ -205,11 +205,21 @@ namespace mc
 			le::Vector3f movement = body.velocity * delta * 20.0f;
 			const le::Vector3f originalMovement = movement;
 
-			const le::AABB aabb = body.aabb.Moved(transform.GetPosition());
+			le::AABB aabb = body.aabb.Moved(transform.GetPosition());
 			FindColliders(aabb.Expanded(body.velocity).Grown(1.0f));
 
 			for (le::AABB collider : m_colliders)
-				movement = aabb.GetClip(collider, movement);
+				movement.x = aabb.GetClipX(collider, movement.x);
+
+			aabb.Move(le::Vector3f(movement.x, 0.0f, 0.0f));
+
+			for (le::AABB collider : m_colliders)
+				movement.y = aabb.GetClipY(collider, movement.y);
+
+			aabb.Move(le::Vector3f(0.0f, movement.y, 0.0f));
+
+			for (le::AABB collider : m_colliders)
+				movement.z = aabb.GetClipZ(collider, movement.z);
 
 			body.onGround = movement.y != originalMovement.y;
 
