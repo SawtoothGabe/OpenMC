@@ -93,6 +93,12 @@ namespace mc
 				case Block::Face::BOTTOM: block.y -= 1.0f; break;
 			}
 
+			const auto playerPos = m_entity.GetComponentData<le::Transform>().GetPosition();
+			const auto playerAABB = m_entity.GetComponentData<PhysicsBody>().aabb.Moved(playerPos);
+			const auto blockAABB = le::AABB(block, block + le::Vector3f(1.0f));
+			if (le::PhysicsTests::Intersects(playerAABB, blockAABB))
+				return;
+
 			m_world.SetBlock(std::floor(block.x), std::floor(block.y), std::floor(block.z), 1);
 		}
 
